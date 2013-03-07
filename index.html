@@ -33,7 +33,9 @@
 				  			$('#secondsField').val(seconds).prop('disabled', true);
 				  			$('#minutesField').val(minutes).prop('disabled', true);
 				  			$('#hoursField').val(hours).prop('disabled', true);
-				  			$('#projectField').val(dataReceive.params.project).prop('disabled', true);
+				  			$('#widthField').prop('disabled', true);
+				  			$('#heightField').prop('disabled', true);
+				  			$('#project').val(dataReceive.params.project).prop('disabled', true);
 				  			
 				  			$('#samplePic').attr("src","./samlplePic.jpeg?" + new Date().getTime() );
 				  		}
@@ -42,7 +44,9 @@
 				  			$('#secondsField').prop('disabled', false);
 				  			$('#minutesField').prop('disabled', false);
 				  			$('#hoursField').prop('disabled', false);
-				  			$('#projectField').prop('disabled', false);
+				  			$('#widthField').prop('disabled', false);
+				  			$('#heightField').prop('disabled', false);
+				  			$('#project').prop('disabled', false);
 				  		}
 	    			});
             };
@@ -59,8 +63,8 @@
 	    			});
             };      
     function startTimeLapse(){
-    	var seconds = parseFloat($('#hoursField').val()) * 3600 + parseFloat($('#minutesField').val())*60 + parseFloat($('#secondsField').val()); 
-    	var dataToSend = {'seconds':seconds, 'project': $('#project').val()}
+    	var seconds = parseFloat($('#hoursField').val()) * 3600 + parseFloat($('#minutesField').val())*60 + parseFloat($('#secondsField').val());
+    	var dataToSend = {'seconds':seconds, 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val()}
     	$.post('./start', dataToSend,
     				function (dataReceive) {
     					$('#status').html('starting timelapse');;
@@ -75,15 +79,15 @@
     </script>
     
     
-		<div id='newTimeLapse'>
-		Hours: <input type="text" id="hoursField"  value="0" size='4'>,
-		Minutes: <input type="text" id="minutesField"  value="0" size='4'>,
-		Seconds: <input type="text" id='secondsField' value="30" size='4'><br>
-  		Project name: <input type="text" id="project" id='projectField' value="my time lapse"><br>
+		Take a picture every: <input type="text" id="hoursField"  value="0" size='4'>:
+		<input type="text" id="minutesField"  value="0" size='4'>:
+		<input type="text" id='secondsField' value="30" size='4'>    (Hours : Minutes : Seconds)<br>
+  		Resolution: <input type="text" id="widthField"  value="800" size='4'> x <input type="text" id="heightField"  value="600" size='4'> <br>
+		Project name: <input type="text" id="project" id='projectField' value="my time lapse"><br>
   		<input type="button" id='starTimeLapseButton' onclick="startTimeLapse();" value="Start timelapse" />
-  		</div>
+  		
 	<br>
-	
+		
 	<input type="button" id='stopTimeLapseButton' onclick="stopTimeLapse();" value="click to stop the timelapse" />
 	
 	<form action="./active" method="POST">

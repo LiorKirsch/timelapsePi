@@ -89,7 +89,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if os.path.lexists("/dev/video" + str(i)):
                     self.WEBCAM = "/dev/video" + str(i)
                     break
-            self.takePicture('.' )
+            self.takePicture('.' ,('800','600') )
                 
         elif path[-1] == 'start': 
             
@@ -100,14 +100,24 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     break
                 
             if postvars.has_key('project'):
-                folder = '/tmp/' + postvars['project'][0] + '/'
+                folder = self.server.mediaFolderDefault + '/' + postvars['project'][0] + '/'
                 if not os.path.lexists(folder):
                     os.mkdir(folder)
             else:
-                folder = '/tmp/'
-                
+                folder = self.server.mediaFolderDefault + '/'
+            
+            if postvars.has_key('imageWidth'):
+                imageWidth = postvars['imageWidth'][0]
+            else:
+                imageWidth = self.server.imageWidthDefault
+            
+            if postvars.has_key('imageHeight'):
+                imageHeight = postvars['imageHeight'][0]
+            else:
+                imageHeight = self.server.imageHeightDefault
+                 
             if postvars.has_key('seconds') & postvars['seconds'][0].isdigit():
-                thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], folder, postvars['project'][0]) )
+                thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], folder, postvars['project'][0], (imageWidth, imageHeight) ) )
                 cameraParam = {'seconds': postvars['seconds'][0],'device': self.WEBCAM,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera started','cameraParam': cameraParam} )
             else:
@@ -119,20 +129,21 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
  
         return
     
-    def takePicture(self, directory , currtime=None, fileName=None):
+    def takePicture(self, directory , resolution, currtime=None, fileName=None):
         if currtime is None:
             currtime = str(time.strftime("%X"))
         if fileName is None:
             fileName = directory + currtime + ".jpeg"
-        subprocess.call(["streamer", "-c", self.WEBCAM, "-s", "800x600", "-o", fileName])
+        resolution = '%sx%s' % (resolution[0] , resolution[1])
+        subprocess.call(["streamer", "-c", self.WEBCAM, "-s", resolution, "-o", fileName])
         shutil.copy (fileName, self.server.sampleFile)
         print(fileName)
 
-    def activateCamera(self, seconds, directory ='/tmp/',  project=None, fileName=None):
-        cameraParam = {'seconds': seconds,'device': self.WEBCAM,'folder': directory,'project':project}
+    def activateCamera(self, seconds, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
+        cameraParam = {'seconds': seconds,'device': self.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
         self.activeFile.createFile( json.dumps(cameraParam) )
         while not self.stopFile.fileExists():
-            self.takePicture(directory, fileName =fileName)
+            self.takePicture(directory, resolution, fileName =fileName)
             time.sleep(float(seconds))
             
         print('camera stopped')
@@ -150,7 +161,12 @@ class MyHTTPServer(SocketServer.TCPServer):
     """this class is necessary to allow passing custom request handler into
        the RequestHandlerClass"""
     def __init__(self, server_address, RequestHandlerClass):
-        self.sampleFile = 'samlplePic.jpeg'           
+        self.sampleFile = 'samlplePic.jpeg'  
+        self.imageWidthDefault = '800'
+        self.imageHeightDefault = '600' 
+        self.mediaFolderDefault = 'media'
+        if not os.path.lexists(self.mediaFolderDefault):
+            os.mkdir(self.mediaFolderDefault)
         stopFile = BooleanFile('stop')
         stopFile.removeFile()
         activeFile = BooleanFile('active')
@@ -181,7 +197,7 @@ def getMyIP():
 if __name__ == "__main__":
     try:
         checkStreamerIsInstalled()
-        port = 9999
+        port = 8800
         server = MyHTTPServer(('', port), MyHandler)
         url = "http://%s:%d" % (getMyIP(), port)
         print('Started http server. go to ' + url) 
