@@ -53,7 +53,7 @@
     function takePic(){
     	$.post('./samplePic', null,
     				function (dataReceive) {
-    					$('#samplePic').attr("src","./samlplePic.jpeg?" + new Date().getTime() );
+    					$('#samplePic').attr("src","./samplePic.jpeg?" + new Date().getTime() );
 	    			});
             };
     function stopTimeLapse(){
@@ -98,6 +98,6 @@
 	
 	<span id='status'> </span> 
 	<br>
-	<img src='./samlplePic.jpeg' id='samplePic'> </img>
+	<img src='./samplePic.jpeg' id='samplePic'> </img>
 </body>
 </html>

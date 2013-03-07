@@ -161,7 +161,7 @@ class MyHTTPServer(SocketServer.TCPServer):
     """this class is necessary to allow passing custom request handler into
        the RequestHandlerClass"""
     def __init__(self, server_address, RequestHandlerClass):
-        self.sampleFile = 'samlplePic.jpeg'  
+        self.sampleFile = 'samplePic.jpeg'  
         self.imageWidthDefault = '800'
         self.imageHeightDefault = '600' 
         self.mediaFolderDefault = 'media'
