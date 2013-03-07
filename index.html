@@ -1,0 +1,99 @@
+<html>
+<head>
+<title> timelapse </title>
+</head>
+
+<body>
+
+<br>
+	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script>
+    function sendPostSignal(url, postData,onSuccess) {
+			$.ajax({
+	        type: "POST",
+	        //the url where you want to sent the userName and password to
+	        url: url,
+	        dataType: 'json',
+	        async: false,
+	        //json object to sent to the authentication url
+	        data: postData,
+	        success: onSuccess  
+    		});
+    }
+    function checkStatus() {
+    		$.post('./active', null,
+    				function (dataReceive) {
+				        if (dataReceive.active) {
+				  			$('#status').html(dataReceive.message);
+				  			var seconds = dataReceive.params.seconds;
+				  			var hours = Math.floor(seconds / 3600);
+				  			seconds = seconds % 3600;
+				  			var minutes = Math.floor(seconds / 60);
+				  			seconds = seconds % 60;
+				  			$('#secondsField').val(seconds).prop('disabled', true);
+				  			$('#minutesField').val(minutes).prop('disabled', true);
+				  			$('#hoursField').val(hours).prop('disabled', true);
+				  			$('#projectField').val(dataReceive.params.project).prop('disabled', true);
+				  			
+				  			$('#samplePic').attr("src","./samlplePic.jpeg?" + new Date().getTime() );
+				  		}
+				  		else {
+				  			$('#status').html(dataReceive.message);
+				  			$('#secondsField').prop('disabled', false);
+				  			$('#minutesField').prop('disabled', false);
+				  			$('#hoursField').prop('disabled', false);
+				  			$('#projectField').prop('disabled', false);
+				  		}
+	    			});
+            };
+    function takePic(){
+    	$.post('./samplePic', null,
+    				function (dataReceive) {
+    					$('#samplePic').attr("src","./samlplePic.jpeg?" + new Date().getTime() );
+	    			});
+            };
+    function stopTimeLapse(){
+    	$.post('./stop', 
+    				function (dataReceive) {
+    					$('#status').html('stopping');;
+	    			});
+            };      
+    function startTimeLapse(){
+    	var seconds = parseFloat($('#hoursField').val()) * 3600 + parseFloat($('#minutesField').val())*60 + parseFloat($('#secondsField').val()); 
+    	var dataToSend = {'seconds':seconds, 'project': $('#project').val()}
+    	$.post('./start', dataToSend,
+    				function (dataReceive) {
+    					$('#status').html('starting timelapse');;
+	    			});
+            };      
+            
+    checkStatus();
+    window.setInterval(function(){
+	   checkStatus();
+	}, 5000);
+		 
+    </script>
+    
+    
+		<div id='newTimeLapse'>
+		Hours: <input type="text" id="hoursField"  value="0" size='4'>,
+		Minutes: <input type="text" id="minutesField"  value="0" size='4'>,
+		Seconds: <input type="text" id='secondsField' value="30" size='4'><br>
+  		Project name: <input type="text" id="project" id='projectField' value="my time lapse"><br>
+  		<input type="button" id='starTimeLapseButton' onclick="startTimeLapse();" value="Start timelapse" />
+  		</div>
+	<br>
+	
+	<input type="button" id='stopTimeLapseButton' onclick="stopTimeLapse();" value="click to stop the timelapse" />
+	
+	<form action="./active" method="POST">
+  		<input type="submit" value="click for status">
+	</form>
+	
+	<input type="button" id='takePicButton' onclick="takePic();" value="click to take pic" />
+	
+	<span id='status'> </span> 
+	<br>
+	<img src='./samlplePic.jpeg' id='samplePic'> </img>
+</body>
+</html>
