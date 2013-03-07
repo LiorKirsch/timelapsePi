@@ -126,7 +126,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if fileName is None:
             fileName = directory + currtime + ".jpeg"
         resolution = '%sx%s' % (resolution[0] , resolution[1])
-        subprocess.call(["streamer", "-c", self.server.WEBCAM, "-s", resolution, "-o", fileName])
+        subprocess.call(["streamer", "-c", self.server.WEBCAM, "-s", resolution, "-o", fileName,"-j","100"])
         shutil.copy (fileName, self.server.sampleFileName)
         print(fileName)
 
