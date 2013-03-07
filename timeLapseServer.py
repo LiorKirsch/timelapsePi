@@ -49,8 +49,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return postvars
     
     def do_POST(self):
-        self.stopFile = BooleanFile('stop')
-        self.activeFile = BooleanFile('active')   
+         
         p = self.path.split("?")
         path = p[0][1:].split("/")
         
@@ -63,7 +62,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.end_headers()
 
         
-            self.stopFile.createFile()
+            self.server.stopFile.createFile()
             self.wfile.write(json.dumps({'status' :'stop sent'} ))
         
         elif path[-1] == 'active':
@@ -71,9 +70,9 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            if self.activeFile.fileExists():
-                params = self.activeFile.readFile()
-                if self.stopFile.fileExists():
+            if self.server.activeFile.fileExists():
+                params = self.server.activeFile.readFile()
+                if self.server.stopFile.fileExists():
                     self.wfile.write(json.dumps({'active' :True,'params':params,'message':'stopping on next cycle'} ))
                 else:
                     self.wfile.write(json.dumps({'active' :True,'params':params,'message':'active'} ))
@@ -85,19 +84,11 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            for i in range(11):
-                if os.path.lexists("/dev/video" + str(i)):
-                    self.WEBCAM = "/dev/video" + str(i)
-                    break
             self.takePicture('.' ,('800','600') )
                 
         elif path[-1] == 'start': 
             
-            self.stopFile.removeFile()
-            for i in range(11):
-                if os.path.lexists("/dev/video" + str(i)):
-                    self.WEBCAM = "/dev/video" + str(i)
-                    break
+            self.server.stopFile.removeFile()
                 
             if postvars.has_key('project'):
                 folder = self.server.mediaFolderDefault + '/' + postvars['project'][0] + '/'
@@ -118,10 +109,10 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                  
             if postvars.has_key('seconds') & postvars['seconds'][0].isdigit():
                 thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], folder, postvars['project'][0], (imageWidth, imageHeight) ) )
-                cameraParam = {'seconds': postvars['seconds'][0],'device': self.WEBCAM,'folder': folder}
+                cameraParam = {'seconds': postvars['seconds'][0],'device': self.server.WEBCAM,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera started','cameraParam': cameraParam} )
             else:
-                cameraParam = {'seconds': postvars['seconds'][0],'device': self.WEBCAM,'folder': folder}
+                cameraParam = {'seconds': postvars['seconds'][0],'device': self.server.WEBCAM,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera not started','cameraParam': cameraParam} )
                 
             self.wfile.write(jsonResponse)        
@@ -135,20 +126,20 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if fileName is None:
             fileName = directory + currtime + ".jpeg"
         resolution = '%sx%s' % (resolution[0] , resolution[1])
-        subprocess.call(["streamer", "-c", self.WEBCAM, "-s", resolution, "-o", fileName])
-        shutil.copy (fileName, self.server.sampleFile)
+        subprocess.call(["streamer", "-c", self.server.WEBCAM, "-s", resolution, "-o", fileName])
+        shutil.copy (fileName, self.server.sampleFileName)
         print(fileName)
 
     def activateCamera(self, seconds, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
-        cameraParam = {'seconds': seconds,'device': self.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
-        self.activeFile.createFile( json.dumps(cameraParam) )
-        while not self.stopFile.fileExists():
+        cameraParam = {'seconds': seconds,'device': self.server.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
+        self.server.activeFile.createFile( json.dumps(cameraParam) )
+        while not self.server.stopFile.fileExists():
             self.takePicture(directory, resolution, fileName =fileName)
             time.sleep(float(seconds))
             
         print('camera stopped')
-        self.stopFile.removeFile()
-        self.activeFile.removeFile()
+        self.server.stopFile.removeFile()
+        self.server.activeFile.removeFile()
                 
     def log_request(self, code=None, size=None):
         print('Request')
@@ -161,18 +152,25 @@ class MyHTTPServer(SocketServer.TCPServer):
     """this class is necessary to allow passing custom request handler into
        the RequestHandlerClass"""
     def __init__(self, server_address, RequestHandlerClass):
-        self.sampleFile = 'samplePic.jpeg'  
+        self.sampleFileName = 'samplePic.jpeg'  
         self.imageWidthDefault = '800'
         self.imageHeightDefault = '600' 
         self.mediaFolderDefault = 'media'
+        
         if not os.path.lexists(self.mediaFolderDefault):
             os.mkdir(self.mediaFolderDefault)
-        stopFile = BooleanFile('stop')
-        stopFile.removeFile()
-        activeFile = BooleanFile('active')
-        activeFile.removeFile()
-        activeFile = BooleanFile(self.sampleFile)
-        activeFile.removeFile()
+        self.stopFile = BooleanFile('stop')
+        self.stopFile.removeFile()
+        self.activeFile = BooleanFile('active')
+        self.activeFile.removeFile()
+        self.sampleFile = BooleanFile(self.sampleFileName)
+        self.sampleFile.removeFile()
+        
+        for i in range(11):
+                if os.path.lexists("/dev/video" + str(i)):
+                    self.WEBCAM = "/dev/video" + str(i)
+                    break
+                
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass) 
         #HTTPServer.__init__(self, server_address, RequestHandlerClass)   
 
