@@ -24,7 +24,7 @@
     		$.post('./active', null,
     				function (dataReceive) {
 				        if (dataReceive.active) {
-				  			$('#status').html(dataReceive.message);
+				  			$('#status').html(dataReceive.message + ' last image on ' + dataReceive.params.lastPictureTime);
 				  			var seconds = dataReceive.params.seconds;
 				  			var hours = Math.floor(seconds / 3600);
 				  			seconds = seconds % 3600;
@@ -82,7 +82,7 @@
 		Take a picture every: <input type="text" id="hoursField"  value="0" size='4'>:
 		<input type="text" id="minutesField"  value="0" size='4'>:
 		<input type="text" id='secondsField' value="30" size='4'>    (Hours : Minutes : Seconds)<br>
-  		Resolution: <input type="text" id="widthField"  value="800" size='4'> x <input type="text" id="heightField"  value="600" size='4'> <br>
+  		Resolution: <input type="text" id="widthField"  value="1280" size='4'> x <input type="text" id="heightField"  value="720" size='4'> <br>
 		Project name: <input type="text" id="project" id='projectField' value="my time lapse"><br>
   		<input type="button" id='starTimeLapseButton' onclick="startTimeLapse();" value="Start timelapse" />
   		
@@ -101,3 +101,4 @@
 	<img src='./samplePic.jpeg' id='samplePic'> </img>
 </body>
 </html>
+

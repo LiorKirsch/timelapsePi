@@ -72,6 +72,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             if self.server.activeFile.fileExists():
                 params = self.server.activeFile.readFile()
+                params['lastPictureTime'] = self.server.lastPictureTime
                 if self.server.stopFile.fileExists():
                     self.wfile.write(json.dumps({'active' :True,'params':params,'message':'stopping on next cycle'} ))
                 else:
@@ -84,7 +85,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            self.takePicture('.' ,('800','600') )
+            self.takePicture('' ,('800','600') )
                 
         elif path[-1] == 'start': 
             
@@ -94,6 +95,12 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 folder = self.server.mediaFolderDefault + '/' + postvars['project'][0] + '/'
                 if not os.path.lexists(folder):
                     os.mkdir(folder)
+
+            #try:
+            #	if not os.path.lexists(self.server.boxMediaFolder + folder):
+            #		os.mkdir(self.server.boxMediaFolder + folder)
+            #except:
+            #	print('error creating box project folder')
             else:
                 folder = self.server.mediaFolderDefault + '/'
             
@@ -125,10 +132,20 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             currtime = str(time.strftime("%X"))
         if fileName is None:
             fileName = directory + currtime + ".jpeg"
+        
         resolution = '%sx%s' % (resolution[0] , resolution[1])
         subprocess.call(["streamer", "-c", self.server.WEBCAM, "-s", resolution, "-o", fileName,"-j","100"])
-        shutil.copy (fileName, self.server.sampleFileName)
-        print(fileName)
+        self.server.lastPictureTime = currtime
+        try:
+        
+            print(fileName)
+            outputFile = self.server.sampleFileName
+            shutil.copy (fileName, outputFile)
+            #outputFile = self.server.boxMediaFolder + fileName
+            #shutil.copy(fileName, outputFile)
+
+        except:
+            print('error copyting %s to %s' % (fileName, outputFile) )
 
     def activateCamera(self, seconds, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
         cameraParam = {'seconds': seconds,'device': self.server.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
@@ -156,6 +173,8 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.imageWidthDefault = '800'
         self.imageHeightDefault = '600' 
         self.mediaFolderDefault = 'media'
+        self.boxMediaFolder = '/media/box.com/'
+        self.lastPictureTime = None
         
         if not os.path.lexists(self.mediaFolderDefault):
             os.mkdir(self.mediaFolderDefault)
@@ -195,7 +214,7 @@ def getMyIP():
 if __name__ == "__main__":
     try:
         checkStreamerIsInstalled()
-        port = 8800
+        port = 8000
         server = MyHTTPServer(('', port), MyHandler)
         url = "http://%s:%d" % (getMyIP(), port)
         print('Started http server. go to ' + url) 
@@ -205,6 +224,3 @@ if __name__ == "__main__":
         print('^C received, shutting down server')
         server.socket.close()
         
-        
-
-
