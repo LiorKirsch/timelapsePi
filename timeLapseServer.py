@@ -1,6 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import os, cgi, shutil
 import subprocess
+from threading import Thread
 import time
 import thread
 import json
@@ -183,9 +184,30 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         outputFileName = folder + 'output.avi'
         print("Creating movie: %s" % outputFileName)
         coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
-        subprocess.call( coderCommand.split(" "), stdout=subprocess.PIPE)
+        proc = subprocess.Popen( coderCommand.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        Thread(target=self.stream_watcher, name='stdout-watcher', args=('STDOUT', proc.stdout)).start()
+        Thread(target=self.stream_watcher, name='stderr-watcher', args=('STDERR', proc.stderr)).start()
+        #(output, error) = proc.communicate()
+        #print("Output:\n%s" % output)
+        #print("Errors:\n%s" % error)
+        proc.wait()
         print('done creating movie %s' % outputFileName)
+
         return outputFileName
+    
+    
+    def stream_watcher(self, identifier, stream):
+
+        for line in stream:
+            print(line)
+            #print('%s:%s' %(identifier, line))
+            #m_obj = re.search(r"(\d?%)", line)
+            #m_obj2 = re.search(r"coder", line)
+            #if m_obj is not None:
+            #    print m_obj.group(1)
+    
+        if not stream.closed:
+            stream.close()
 
     #def log_request(self, code=None, size=None):
     #    print('Request')
@@ -246,7 +268,7 @@ def getMyIP():
 if __name__ == "__main__":
     try:
         checkStreamerIsInstalled()
-        port = 8000
+        port = 8800
         server = MyHTTPServer(('', port), MyHandler)
         url = "http://%s:%d" % (getMyIP(), port)
         print('Started http server. go to ' + url) 
