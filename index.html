@@ -61,13 +61,22 @@
     				function (dataReceive) {
     					$('#status').html('stopping');;
 	    			});
-            };      
+            }; 
+            
+    function makeMovie(){
+    	var dataToSend = { 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val(), 'fps' :$('#fps').val()}
+    	$.post('./createMovie', dataToSend,
+    				function (dataReceive) {
+    					$('#movieLink').attr("href",dataReceive.movieFileName);
+	    			});
+            };
+         
     function startTimeLapse(){
     	var seconds = parseFloat($('#hoursField').val()) * 3600 + parseFloat($('#minutesField').val())*60 + parseFloat($('#secondsField').val());
     	var dataToSend = {'seconds':seconds, 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val()}
     	$.post('./start', dataToSend,
     				function (dataReceive) {
-    					$('#status').html('starting timelapse');;
+    					$('#status').html('starting timelapse');
 	    			});
             };      
             
@@ -97,6 +106,9 @@
 	<input type="button" id='takePicButton' onclick="takePic();" value="click to take pic" />
 	
 	<span id='status'> </span> 
+	<br>
+	Frames per second: <input type="text" id='fps' value="20" size='3'>
+	<input type="button" id='makeMovie' onclick="makeMovie();" value="click to create the movie" /> <a id='movieLink' > movie </a>
 	<br>
 	<img src='./samplePic.jpeg' id='samplePic'> </img>
 </body>

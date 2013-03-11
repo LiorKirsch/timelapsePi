@@ -6,6 +6,7 @@ import thread
 import json
 import SimpleHTTPServer
 import SocketServer
+import re
 
 class BooleanFile():
     def __init__(self, fileName):
@@ -62,7 +63,8 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.end_headers()
 
         
-            self.server.stopFile.createFile()
+            #self.server.stopFile.createFile()
+            self.server.stopSignal = True
             self.wfile.write(json.dumps({'status' :'stop sent'} ))
         
         elif path[-1] == 'active':
@@ -70,10 +72,10 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            if self.server.activeFile.fileExists():
-                params = self.server.activeFile.readFile()
+            if self.server.isActive:
+                params = self.server.lastActivationParams
                 params['lastPictureTime'] = self.server.lastPictureTime
-                if self.server.stopFile.fileExists():
+                if self.server.stopSignal:
                     self.wfile.write(json.dumps({'active' :True,'params':params,'message':'stopping on next cycle'} ))
                 else:
                     self.wfile.write(json.dumps({'active' :True,'params':params,'message':'active'} ))
@@ -86,13 +88,24 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.end_headers()
 
             self.takePicture('' ,('800','600') )
-                
+        
+        elif path[-1] == 'createMovie':
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            
+            projectName =  postvars['project'][0] 
+            resolution = (postvars['imageWidth'][0] , postvars['imageHeight'][0])
+            framesPerSecond =  postvars['fps'][0]
+            outputFileName = self.createMovie(projectName, framesPerSecond, resolution)
+            self.wfile.write( json.dumps({'movieFileName' :outputFileName} ))
+                        
         elif path[-1] == 'start': 
             
             self.server.stopFile.removeFile()
                 
             if postvars.has_key('project'):
-                folder = self.server.mediaFolderDefault + '/' + postvars['project'][0] + '/'
+                folder = self.getProjectFolder( postvars['project'][0] )
                 if not os.path.lexists(folder):
                     os.mkdir(folder)
 
@@ -126,7 +139,11 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             
  
         return
-    
+   
+    def getProjectFolder(self, projectName):
+        projectName = re.sub(' ', '-', projectName)
+        return self.server.mediaFolderDefault + '/' + projectName + '/'
+     
     def takePicture(self, directory , resolution, currtime=None, fileName=None):
         if currtime is None:
             currtime = str(time.strftime("%X"))
@@ -147,19 +164,30 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         except:
             print('error copyting %s to %s' % (fileName, outputFile) )
 
+    
     def activateCamera(self, seconds, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
-        cameraParam = {'seconds': seconds,'device': self.server.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
-        self.server.activeFile.createFile( json.dumps(cameraParam) )
-        while not self.server.stopFile.fileExists():
+         
+        self.server.lastActivationParams = {'seconds': seconds,'device': self.server.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
+        self.server.isActive = True
+        
+        while not self.server.stopSignal:
             self.takePicture(directory, resolution, fileName =fileName)
             time.sleep(float(seconds))
             
         print('camera stopped')
-        self.server.stopFile.removeFile()
-        self.server.activeFile.removeFile()
-                
-    def log_request(self, code=None, size=None):
-        print('Request')
+        self.server.isActive = False
+        self.server.stopSignal = False
+    
+    def createMovie(self, projectName, framesPerSecond, resolution):
+        folder = self.getProjectFolder( projectName )
+        outputFileName = folder + 'output.avi'
+        print("Creating movie: %s" % outputFileName)
+        coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
+        subprocess.call( coderCommand.split(" "), stdout=subprocess.PIPE)
+        return outputFileName
+
+    #def log_request(self, code=None, size=None):
+    #    print('Request')
 
     def log_message(self, format, *args):
         print('Message')
@@ -175,6 +203,9 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.mediaFolderDefault = 'media'
         self.boxMediaFolder = '/media/box.com/'
         self.lastPictureTime = None
+        self.lastActivationParams = {}
+        self.isActive = False
+        self.stopSignal = False
         
         if not os.path.lexists(self.mediaFolderDefault):
             os.mkdir(self.mediaFolderDefault)
