@@ -184,13 +184,14 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         print("Creating movie: %s" % outputFileName)
         coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
         subprocess.call( coderCommand.split(" "), stdout=subprocess.PIPE)
+        print('done creating movie %s' % outputFileName)
         return outputFileName
 
     #def log_request(self, code=None, size=None):
     #    print('Request')
 
-    def log_message(self, format, *args):
-        print('Message')
+    #def log_message(self, format, *args):
+    #    print('Message')
 
 
 class MyHTTPServer(SocketServer.TCPServer):
