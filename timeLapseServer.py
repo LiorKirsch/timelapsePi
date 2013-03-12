@@ -88,7 +88,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            self.takePicture('' ,('800','600') )
+            self.takePicture('' ,('800','600') ,fileName=self.server.sampleFileName)
         
         elif path[-1] == 'createMovie':
             self.send_response(200)
