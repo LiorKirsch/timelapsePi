@@ -1,121 +1,175 @@
-<html>
-<head>
-<title> timelapse </title>
-<link rel="stylesheet" href="index.css">
-</head>
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <title> Time lapse
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Le styles -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body { padding-top: 60px; /* 60px to make the container go all the way
+      to the bottom of the topbar */ }
+    </style>
+    <link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="assets/css/timelapse.css" rel="stylesheet">
 
-<body>
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js">
+      </script>
+    <![endif]-->
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+    <style>
+    </style>
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">
+            Time Lapse
+          </a>
+          <ul class="nav">
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <ul class="nav nav-tabs">
+        <li class="active">
+          <a href="#main" data-toggle="tab">
+            Activate camera
+          </a>
+        </li>
+        <li class="">
+          <a href="#movie" data-toggle="tab">
+            Generate movie
+          </a>
+        </li>
+      </ul>
+      
+      <div class="tab-content">
+        	<div class="tab-pane active" id="main">
+      
+		      <div class="row-fluid">
+			<div class="span4">
 
-<br>
-	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-    <script>
-    function sendPostSignal(url, postData,onSuccess) {
-			$.ajax({
-	        type: "POST",
-	        //the url where you want to sent the userName and password to
-	        url: url,
-	        dataType: 'json',
-	        async: false,
-	        //json object to sent to the authentication url
-	        data: postData,
-	        success: onSuccess  
-    		});
-    }
-    function checkStatus() {
-    		$.post('./active', null,
-    				function (dataReceive) {
-				        if (dataReceive.active) {
-				  			$('#status').html(dataReceive.message + ' last image on ' + dataReceive.params.lastPictureTime);
-				  			var seconds = dataReceive.params.seconds;
-				  			var hours = Math.floor(seconds / 3600);
-				  			seconds = seconds % 3600;
-				  			var minutes = Math.floor(seconds / 60);
-				  			seconds = seconds % 60;
-				  			$('#secondsField').val(seconds).prop('disabled', true);
-				  			$('#minutesField').val(minutes).prop('disabled', true);
-				  			$('#hoursField').val(hours).prop('disabled', true);
-				  			$('#widthField').prop('disabled', true);
-				  			$('#heightField').prop('disabled', true);
-				  			$('#project').val(dataReceive.params.project).prop('disabled', true);
-				  			
-				  			$('#samplePic').attr("src","./samplePic.jpeg?" + new Date().getTime() );
-				  		}
-				  		else {
-				  			$('#status').html(dataReceive.message);
-				  			$('#secondsField').prop('disabled', false);
-				  			$('#minutesField').prop('disabled', false);
-				  			$('#hoursField').prop('disabled', false);
-				  			$('#widthField').prop('disabled', false);
-				  			$('#heightField').prop('disabled', false);
-				  			$('#project').prop('disabled', false);
-				  		}
-	    			});
-            };
-    function takePic(){
-    	$.post('./samplePic', null,
-    				function (dataReceive) {
-    					$('#samplePic').attr("src","./samplePic.jpeg?" + new Date().getTime() );
-	    			});
-            };
-    function stopTimeLapse(){
-    	$.post('./stop', 
-    				function (dataReceive) {
-    					$('#status').html('stopping');;
-	    			});
-            }; 
-            
-    function makeMovie(){
-    	$('#createMoviePreLoader').show();
-    	$('#movieLink').hide();
-       	var dataToSend = { 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val(), 'fps' :$('#fps').val()}
-    	$.post('./createMovie', dataToSend,
-    				function (dataReceive) {
-    					$('#createMoviePreLoader').hide();
-    					$('#movieLink').attr("href",dataReceive.movieFileName);
-    					$('#movieLink').show();
-	    			});
-            };
-         
-    function startTimeLapse(){
-    	var seconds = parseFloat($('#hoursField').val()) * 3600 + parseFloat($('#minutesField').val())*60 + parseFloat($('#secondsField').val());
-    	var dataToSend = {'seconds':seconds, 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val()}
-    	$.post('./start', dataToSend,
-    				function (dataReceive) {
-    					$('#status').html('starting timelapse');
-	    			});
-            };      
-            
-    checkStatus();
-    window.setInterval(function(){
-	   checkStatus();
-	}, 5000);
-		 
+				<form class="form-horizontal">
+				    <fieldset>
+				      
+					<div class="control-group">
+
+						  <!-- Text input-->
+						  <label class="control-label" for="project">Project Name</label>
+						  <div class="controls">
+							<input id="project" name="project" type="" value="newProject"> 
+						  </div>
+					</div>
+					<div class="control-group">
+					  	<label for="hours" class="control-label">     <i class="icon-time"> 		</i> 	Camera interval: 	</label>
+						<div class="controls">
+							<input id="hoursField" name="hoursField" type="" value="00" class="timeField"> :
+							<input id="minutesField" name="minutesField" type="" value="00" class="timeField"> :
+							<input id="secondsField" name="secondsField" type="" value="20" class="timeField">
+							<span class="help-inline">HH:MM:SS</span>
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="widthField" class="control-label"> Resolution: </label>
+						<div class="controls">
+							<input id="widthField" name="widthField" type="" value="1280" class="resolutionField"> x
+							<input id="heightField" name="heightField" type="" value="720" class="resolutionField">
+						</div>
+					</div>
+					<div class="control-group">
+						<div class="controls">
+							<a class="btn btn-primary" href="#" onclick="startTimeLapse();">
+								<i class="icon-play">	</i> 	Start
+							</a>
+							<a class="btn btn-danger" href="#" onclick="stopTimeLapse();">
+								<i class="icon-stop">  </i> Stop
+							</a>
+						</div>
+					</div>
+				    </fieldset>
+				      
+				  </form>
+			</div>
+			<div class="span7 offset1">
+			  <a class="btn btn-success" href="#" onclick="takePic();">
+				<i class="icon-camera">   </i>
+			    Test camera
+			  </a>
+			  <div class="alert alert-info">
+			    <p id="status">
+			      .
+			    </p>
+			  </div>
+			  <img src='./samplePic.jpeg' id='samplePic' style=" height: 350px;">
+			</div>
+		      </div>
+		</div>
+		<div class="tab-pane" id="movie">
+		           <div class="row-fluid">
+			    <div class="span4">
+				  <form class="form-horizontal">
+				    <fieldset>
+				      
+					<div class="control-group">
+
+						  <!-- Text input-->
+						  <label class="control-label" for="projectList">Choose project</label>
+						  <div class="controls">
+							<select name="projectList" id="projectList" > 		  </select>
+						  </div>
+						  <label for="fps" class="control-label">     Frame per seconds: 	</label>
+						<div class="controls">
+							<input id="fps" name="fps" type="" placeholder="20" class="timeField">
+						</div>
+					</div>
+					<div class="control-group">
+						<div class="controls">
+							<a class="btn btn-primary" href="#" onclick="makeMovie();"> Create movie </a>
+							<div class="progress progress-striped">
+								<div class="bar" style="width: 1%"></div> 
+							</div>
+							<img src='"assets/img/pageLoadPreloader.gif' id='createMoviePreLoader'>
+							<a id='movieLink' > movie </a>
+						</div>
+					</div>
+				    </fieldset>
+				     
+				  </form>
+
+			    </div>
+			    <div class="span7 offset1">
+			      <div>
+				<p>
+				  Content
+				</p>
+			      </div>
+			    </div>
+			  </div>
+			
+			
+		</div>
+    
+     </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js">
     </script>
-    
-    
-		Take a picture every: <input type="text" id="hoursField"  value="0" size='4'>:
-		<input type="text" id="minutesField"  value="0" size='4'>:
-		<input type="text" id='secondsField' value="30" size='4'>    (Hours : Minutes : Seconds)<br>
-  		Resolution: <input type="text" id="widthField"  value="1280" size='4'> x <input type="text" id="heightField"  value="720" size='4'> <br>
-		Project name: <input type="text" id="project" id='projectField' value="my time lapse"><br>
-  		<input type="button" id='starTimeLapseButton' onclick="startTimeLapse();" value="Start timelapse" />
-  		
-	<br>
-		
-	<input type="button" id='stopTimeLapseButton' onclick="stopTimeLapse();" value="click to stop the timelapse" />
-	
-	<form action="./active" method="POST">
-  		<input type="submit" value="click for status">
-	</form>
-	
-	<input type="button" id='takePicButton' onclick="takePic();" value="click to take pic" />
-	
-	<span id='status'> </span> 
-	<br>
-	Frames per second: <input type="text" id='fps' value="20" size='3'>
-	<input type="button" id='makeMovie' onclick="makeMovie();" value="click to create the movie" /> <img src='pageLoadPreloader.gif' id='createMoviePreLoader'><a id='movieLink' > movie </a>
-	<br>
-	<img src='./samplePic.jpeg' id='samplePic'> </img>
-</body>
+    <script src="assets/js/bootstrap.js">
+    </script>
+    <script src="assets/js/timelapse.js">
+    </script>
+  </body>
 </html>
-

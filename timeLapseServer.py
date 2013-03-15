@@ -68,6 +68,23 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.server.stopSignal = True
             self.wfile.write(json.dumps({'status' :'stop sent'} ))
         
+        elif path[-1] == 'projectList':
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            directoriesNames = os.listdir(self.server.mediaFolderDefault)
+            projectObject = []
+            for projectName in directoriesNames:
+                folder = self.getProjectFolder( projectName )
+                outputFileName = folder + self.server.outputFileName
+                if os.path.lexists(outputFileName):
+                    outputFilePath = outputFileName
+                else:
+                    outputFilePath = None
+                    
+                projectObject.append({'name': projectName,'outputFilePath':outputFilePath})
+            self.wfile.write( json.dumps({'list' : projectObject}))
+            
         elif path[-1] == 'active':
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -141,6 +158,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
  
         return
    
+        
     def getProjectFolder(self, projectName):
         projectName = re.sub(' ', '-', projectName)
         return self.server.mediaFolderDefault + '/' + projectName + '/'
@@ -180,8 +198,9 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.server.stopSignal = False
     
     def createMovie(self, projectName, framesPerSecond, resolution):
+        self.server.encodingInProgress = True
         folder = self.getProjectFolder( projectName )
-        outputFileName = folder + 'output.avi'
+        outputFileName = folder + self.server.outputFileName
         print("Creating movie: %s" % outputFileName)
         coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
         proc = subprocess.Popen( coderCommand.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -192,7 +211,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #print("Errors:\n%s" % error)
         proc.wait()
         print('done creating movie %s' % outputFileName)
-
+        self.server.encodingInProgress = False
         return outputFileName
     
     
@@ -229,7 +248,9 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.lastActivationParams = {}
         self.isActive = False
         self.stopSignal = False
-        
+        self.encodingInProgress = False
+        self.outputFileName = 'output.avi'
+
         if not os.path.lexists(self.mediaFolderDefault):
             os.mkdir(self.mediaFolderDefault)
         self.stopFile = BooleanFile('stop')
@@ -268,7 +289,7 @@ def getMyIP():
 if __name__ == "__main__":
     try:
         checkStreamerIsInstalled()
-        port = 8800
+        port = 8000
         server = MyHTTPServer(('', port), MyHandler)
         url = "http://%s:%d" % (getMyIP(), port)
         print('Started http server. go to ' + url) 

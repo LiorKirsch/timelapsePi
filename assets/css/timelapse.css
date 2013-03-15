@@ -1,0 +1,15 @@
+  .timeField{
+        width:30px;
+      }
+      
+      .resolutionField {
+          width:35px;
+      }
+#createMoviePreLoader {
+display:none;
+}
+
+#movieLink {
+display:none;
+}
+
