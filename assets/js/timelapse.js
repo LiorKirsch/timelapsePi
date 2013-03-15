@@ -71,7 +71,7 @@
     function makeMovie(){
     	$('#createMoviePreLoader').show();
     	$('#movieLink').hide();
-       	var dataToSend = { 'project': $('#projectList').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val(), 'fps' :$('#fps').val()}
+       	var dataToSend = { 'project': $('#projectList').find('option:selected').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val(), 'fps' :$('#fps').val()}
     	$.post('./createMovie', dataToSend,
     				function (dataReceive) {
     					$('#createMoviePreLoader').hide();
