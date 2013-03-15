@@ -105,7 +105,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            self.takePicture('' ,('800','600') )
+            self.takePicture('' ,('800','600') ,fileName=self.server.sampleFileName)
         
         elif path[-1] == 'createMovie':
             self.send_response(200)
@@ -287,13 +287,17 @@ def getMyIP():
     return my_ip
 
 if __name__ == "__main__":
+    port = 8000
+    try:
+        url = "http://%s:%d" % (getMyIP(), port)
+        print('Started http server. go to ' + url)
+    except: 
+        print('Some errro getting IP')
+
     try:
         checkStreamerIsInstalled()
-        port = 8000
         server = MyHTTPServer(('', port), MyHandler)
-        url = "http://%s:%d" % (getMyIP(), port)
-        print('Started http server. go to ' + url) 
-        #webbrowser.open(url,new='new')
+	#webbrowser.open(url,new='new')
         server.serve_forever()
     except KeyboardInterrupt:
         print('^C received, shutting down server')
