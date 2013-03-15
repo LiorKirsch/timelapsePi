@@ -40,6 +40,28 @@
 				  		}
 	    			});
             };
+            
+    function getVideoDevices(){
+    	$.post('./getVideoDevices', null,
+    				function (dataReceive) {
+    					if dataReceive.length == 0{
+    						
+    					}
+    					else{
+    						if dataReceive.length > 1 {
+    							for (x in dataReceive)	{
+    								var newOption = $("<option></option>").attr("value",dataReceive[x]).text(dataReceive[x])
+    								newOption.appendTo($('#videDeviceList')); 
+    							}
+    							$('#videDeviceList').show();
+    						}
+    						else{
+    							$('#videDeviceList').hide();
+    						}
+    					}
+    				
+	    			});
+            };
     function takePic(){
     	$.post('./samplePic', null,
     				function (dataReceive) {
@@ -115,3 +137,4 @@ $("#projectList").change(function () {
 
   }).trigger('change');
 	
+  getVideoDevices();
