@@ -57,7 +57,11 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         
         postvars = self.getPostVars()
         
-        
+        if postvars.has_key('videoDevice'):
+            videoDevice = postvars['videoDevice'][0]
+        else:
+            videoDevice = self.server.WEBCAM[0]
+                
         if path[-1] == 'stop':
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -68,6 +72,12 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.server.stopSignal = True
             self.wfile.write(json.dumps({'status' :'stop sent'} ))
         
+        elif path[-1] == 'getVideoDevices':
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write( json.dumps(self.server.WEBCAM) )
+            
         elif path[-1] == 'projectList':
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -105,7 +115,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            self.takePicture('' ,('800','600') )
+            self.takePicture('' ,('800','600') ,videoDevice)
         
         elif path[-1] == 'createMovie':
             self.send_response(200)
@@ -145,12 +155,13 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 imageHeight = self.server.imageHeightDefault
                  
+          
             if postvars.has_key('seconds') & postvars['seconds'][0].isdigit():
-                thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], folder, postvars['project'][0], (imageWidth, imageHeight) ) )
-                cameraParam = {'seconds': postvars['seconds'][0],'device': self.server.WEBCAM,'folder': folder}
+                thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], videoDevice, folder, postvars['project'][0], (imageWidth, imageHeight) ) )
+                cameraParam = {'seconds': postvars['seconds'][0],'device': videoDevice,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera started','cameraParam': cameraParam} )
             else:
-                cameraParam = {'seconds': postvars['seconds'][0],'device': self.server.WEBCAM,'folder': folder}
+                cameraParam = {'seconds': postvars['seconds'][0],'device': videoDevice,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera not started','cameraParam': cameraParam} )
                 
             self.wfile.write(jsonResponse)        
@@ -163,14 +174,14 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         projectName = re.sub(' ', '-', projectName)
         return self.server.mediaFolderDefault + '/' + projectName + '/'
      
-    def takePicture(self, directory , resolution, currtime=None, fileName=None):
+    def takePicture(self, directory , resolution, videoDevice, currtime=None, fileName=None):
         if currtime is None:
             currtime = str(time.strftime("%X"))
         if fileName is None:
             fileName = directory + currtime + ".jpeg"
         
         resolution = '%sx%s' % (resolution[0] , resolution[1])
-        subprocess.call(["streamer", "-c", self.server.WEBCAM, "-s", resolution, "-o", fileName,"-j","100"])
+        subprocess.call(["streamer", "-c", videoDevice, "-s", resolution, "-o", fileName,"-j","100"])
         self.server.lastPictureTime = currtime
         try:
         
@@ -184,13 +195,13 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             print('error copyting %s to %s' % (fileName, outputFile) )
 
     
-    def activateCamera(self, seconds, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
+    def activateCamera(self, seconds, videoDevice, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
          
-        self.server.lastActivationParams = {'seconds': seconds,'device': self.server.WEBCAM,'folder': directory,'project':project, 'resolution': resolution}
+        self.server.lastActivationParams = {'seconds': seconds,'device': videoDevice,'folder': directory,'project':project, 'resolution': resolution}
         self.server.isActive = True
         
         while not self.server.stopSignal:
-            self.takePicture(directory, resolution, fileName =fileName)
+            self.takePicture(directory, resolution,videoDevice, fileName =fileName)
             time.sleep(float(seconds))
             
         print('camera stopped')
@@ -250,6 +261,7 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.stopSignal = False
         self.encodingInProgress = False
         self.outputFileName = 'output.avi'
+        self.WEBCAM = []
 
         if not os.path.lexists(self.mediaFolderDefault):
             os.mkdir(self.mediaFolderDefault)
@@ -262,8 +274,7 @@ class MyHTTPServer(SocketServer.TCPServer):
         
         for i in range(11):
                 if os.path.lexists("/dev/video" + str(i)):
-                    self.WEBCAM = "/dev/video" + str(i)
-                    break
+                    self.WEBCAM.append("/dev/video" + str(i) )
                 
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass) 
         #HTTPServer.__init__(self, server_address, RequestHandlerClass)   
