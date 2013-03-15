@@ -45,7 +45,8 @@
     	$.post('./getVideoDevices', null,
     				function (dataReceive) {
     					if dataReceive.length == 0{
-    						
+    						$('#videDeviceList').hide();
+    						alert('no video devide found');
     					}
     					else{
     						if dataReceive.length > 1 {
@@ -56,7 +57,8 @@
     							$('#videDeviceList').show();
     						}
     						else{
-    							$('#videDeviceList').hide();
+    							$('#videDeviceList').show();
+    							$('#videDeviceList').attr("disabled", "disabled");();
     						}
     					}
     				
