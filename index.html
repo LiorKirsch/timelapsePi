@@ -80,7 +80,7 @@
 						  </div>
 					</div>
 					<div class="control-group">
-					  	<label for="hours" class="control-label">     <i class="icon-time"> 		</i> 	Camera interval: 	</label>
+					  	<label for="secondsField" class="control-label">     <i class="icon-time"> 		</i> 	Camera interval: 	</label>
 						<div class="controls">
 							<input id="hoursField" name="hoursField" type="" value="00" class="timeField"> :
 							<input id="minutesField" name="minutesField" type="" value="00" class="timeField"> :
@@ -103,6 +103,10 @@
 							<a class="btn btn-danger" href="#" onclick="stopTimeLapse();">
 								<i class="icon-stop">  </i> Stop
 							</a>
+							<a class="btn btn-success" href="#" onclick="takePic();">
+							<i class="icon-camera">   </i>
+						   	 Test
+							  </a>
 						</div>
 					</div>
 				    </fieldset>
@@ -110,16 +114,16 @@
 				  </form>
 			</div>
 			<div class="span7 offset1">
-			  <a class="btn btn-success" href="#" onclick="takePic();">
-				<i class="icon-camera">   </i>
-			    Test camera
-			  </a>
-			  <div class="alert alert-info">
+			  
+			  <div id="alertDiv" class="alert alert-info">
 			    <p id="status">
 			      .
 			    </p>
 			  </div>
 			  <img src='./samplePic.jpeg' id='samplePic' style=" height: 350px;">
+			   <p>			  
+				
+			   </p>
 			</div>
 		      </div>
 		</div>
@@ -161,6 +165,7 @@
 				<p>
 				  Content
 				</p>
+				<img src='' id='firstImage' style=" height: 350px;">
 			      </div>
 			    </div>
 			  </div>

@@ -92,7 +92,13 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 else:
                     outputFilePath = None
                     
-                projectObject.append({'name': projectName,'outputFilePath':outputFilePath})
+                firstImageFileName = folder + self.server.firstImageFileName
+                if os.path.lexists(firstImageFileName):
+                    firstImageFileName = firstImageFileName
+                else:
+                    firstImageFileName = None
+                    
+                projectObject.append({'name': projectName,'outputFilePath':outputFilePath,'firstImageFileName': firstImageFileName})
             self.wfile.write( json.dumps({'list' : projectObject}))
             
         elif path[-1] == 'active':
@@ -192,14 +198,15 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             #shutil.copy(fileName, outputFile)
 
         except:
-            print('error copyting %s to %s' % (fileName, outputFile) )
+            print('error copying %s to %s' % (fileName, outputFile) )
 
     
     def activateCamera(self, seconds, videoDevice, directory ='/tmp/',  project=None, resolution =('800','600'), fileName=None):
          
         self.server.lastActivationParams = {'seconds': seconds,'device': videoDevice,'folder': directory,'project':project, 'resolution': resolution}
         self.server.isActive = True
-        
+        self.takePicture(directory, resolution,videoDevice, fileName =directory + self.server.firstImageFileName)
+        time.sleep(float(seconds))
         while not self.server.stopSignal:
             self.takePicture(directory, resolution,videoDevice, fileName =fileName)
             time.sleep(float(seconds))
@@ -261,6 +268,8 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.stopSignal = False
         self.encodingInProgress = False
         self.outputFileName = 'output.avi'
+        self.firstImageFileName = 'firstImage.jpeg'
+
         self.WEBCAM = []
 
         if not os.path.lexists(self.mediaFolderDefault):

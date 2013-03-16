@@ -44,21 +44,18 @@
     function getVideoDevices(){
     	$.post('./getVideoDevices', null,
     				function (dataReceive) {
-    					if dataReceive.length == 0{
+    					if (dataReceive.length == 0 ) {
     						$('#videDeviceList').hide();
     						alert('no video devide found');
     					}
     					else{
-    						if dataReceive.length > 1 {
-    							for (x in dataReceive)	{
-    								var newOption = $("<option></option>").attr("value",dataReceive[x]).text(dataReceive[x])
-    								newOption.appendTo($('#videDeviceList')); 
-    							}
+						for (x in dataReceive)	{
+							var newOption = $("<option></option>").attr("value",dataReceive[x]).text(dataReceive[x])
+							newOption.appendTo($('#videDeviceList')); 
+						}
     							$('#videDeviceList').show();
-    						}
-    						else{
-    							$('#videDeviceList').show();
-    							$('#videDeviceList').attr("disabled", "disabled");();
+    						if (dataReceive.length == 1) {
+    							$('#videDeviceList').attr("disabled", "disabled");
     						}
     					}
     				
@@ -73,9 +70,10 @@
     function projectList(){
     	$.post('./projectList', null,
     				function (dataReceive) {
+					$('#projectList').empty()
 					for (x in dataReceive.list)
 					  {
-						var newOption = $("<option></option>").attr("value",dataReceive.list[x].name).text(dataReceive.list[x].name).attr("data-outputFilePath", dataReceive.list[x].outputFilePath)
+						var newOption = $("<option></option>").attr("value",dataReceive.list[x].name).text(dataReceive.list[x].name).attr("data-outputFilePath", dataReceive.list[x].outputFilePath).attr("data-firstImageFileName", dataReceive.list[x].firstImageFileName)
 						newOption.appendTo($('#projectList')); 
 						if ($('#projectList').val() == dataReceive.list[x].name) {
 							newOption.attr("selected","selected")	;
@@ -136,6 +134,17 @@ $("#projectList").change(function () {
 		else {
 			$('#movieLink').hide();
 		}
+	var firstImageFileName= selected.data('firstimagefilename')
+	if (firstImageFileName)
+		{
+			$('#firstImage').attr("src",firstImageFileName );
+			$('#firstImage').show();
+		}
+		else {
+			$('#firstImage').hide();
+		}
+
+	
 
   }).trigger('change');
 	
