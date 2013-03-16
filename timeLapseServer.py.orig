@@ -115,7 +115,11 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            self.takePicture('' ,('800','600') ,videoDevice,fileName=self.server.sampleFileName)
+<<<<<<< HEAD
+            self.takePicture('' ,('800','600') ,fileName=self.server.sampleFileName)
+=======
+            self.takePicture('' ,('800','600') ,videoDevice)
+>>>>>>> 8906e711f782d920b849a8af781499774a0ff0ac
         
         elif path[-1] == 'createMovie':
             self.send_response(200)
