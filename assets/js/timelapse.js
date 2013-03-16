@@ -75,7 +75,7 @@
 					  {
 						var newOption = $("<option></option>").attr("value",dataReceive.list[x].name).text(dataReceive.list[x].name).attr("data-outputFilePath", dataReceive.list[x].outputFilePath).attr("data-firstImageFileName", dataReceive.list[x].firstImageFileName)
 						newOption.appendTo($('#projectList')); 
-						if ($('#projectList').val() == dataReceive.list[x].name) {
+						if ($('#project').val() == dataReceive.list[x].name) {
 							newOption.attr("selected","selected")	;
 						}
 						//newOption.data('outputFilePath', dataReceive.list[x].outputFilePath);
