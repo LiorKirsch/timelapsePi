@@ -1,5 +1,5 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import os, cgi, shutil
+import os, cgi, shutil, glob
 import subprocess
 from threading import Thread
 import time
@@ -120,8 +120,17 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-
-            self.takePicture('' ,('800','600') ,videoDevice,fileName=self.server.sampleFileName)
+            
+            if postvars.has_key('imageWidth'):
+                imageWidth = postvars['imageWidth'][0]
+            else:
+                imageWidth = self.server.imageWidthDefault
+            if postvars.has_key('imageHeight'):
+                imageHeight = postvars['imageHeight'][0]
+            else:
+                imageHeight = self.server.imageHeightDefault
+            
+            self.takePicture('' ,(imageWidth,imageHeight) ,videoDevice,fileName=self.server.sampleFileName)
         
         elif path[-1] == 'createMovie':
             self.send_response(200)
@@ -281,9 +290,8 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.sampleFile = BooleanFile(self.sampleFileName)
         self.sampleFile.removeFile()
         
-        for i in range(11):
-                if os.path.lexists("/dev/video" + str(i)):
-                    self.WEBCAM.append("/dev/video" + str(i) )
+        for videoDevice in glob.glob("/dev/video*"):
+            self.WEBCAM.append( videoDevice )
                 
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass) 
         #HTTPServer.__init__(self, server_address, RequestHandlerClass)   

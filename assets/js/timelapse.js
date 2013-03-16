@@ -62,7 +62,9 @@
 	    			});
             };
     function takePic(){
-    	$.post('./samplePic', null,
+	var videoDevice = $('#videDeviceList').find('option:selected').val();
+	var dataToSend = {'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val(),'videoDevice': videoDevice}
+    	$.post('./samplePic', dataToSend,
     				function (dataReceive) {
     					$('#samplePic').attr("src","./samplePic.jpeg?" + new Date().getTime() );
 	    			});
@@ -103,8 +105,9 @@
             };
 
     function startTimeLapse(){
+	var videoDevice = $('#videDeviceList').find('option:selected').val();
     	var seconds = parseFloat($('#hoursField').val()) * 3600 + parseFloat($('#minutesField').val())*60 + parseFloat($('#secondsField').val());
-    	var dataToSend = {'seconds':seconds, 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val()}
+    	var dataToSend = {'seconds':seconds, 'project': $('#project').val(), 'imageWidth':  $('#widthField').val(), 'imageHeight' : $('#heightField').val(),'videoDevice': videoDevice}
     	$.post('./start', dataToSend,
     				function (dataReceive) {
     					$('#status').html('starting timelapse');
