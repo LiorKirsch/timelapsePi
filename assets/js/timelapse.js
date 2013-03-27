@@ -100,7 +100,8 @@
     				function (dataReceive) {
     					$('#createMoviePreLoader').hide();
     					$('#movieLink').attr("href",dataReceive.movieFileName);
-    					$('#movieLink').show();
+    					$('#moviePlayer').attr("src",dataReceive.movieFileName);
+    					$('#movieObject').show();
 	    			});
             };
 
@@ -132,10 +133,13 @@ $("#projectList").change(function () {
 	if (outputFileName)
 		{
 			$('#movieLink').attr("href",outputFileName);
+			$('#moviePlayer').attr("src",outputFileName);
 			$('#movieLink').show();
+			$('#movieObject').show();
 		}
 		else {
 			$('#movieLink').hide();
+			$('#movieObject').hide();
 		}
 	var firstImageFileName= selected.data('firstimagefilename')
 	if (firstImageFileName)

@@ -1,0 +1,2 @@
+sudo apt-get install -y streamer
+sudo apt-get install -y mencoder

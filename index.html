@@ -152,7 +152,11 @@
 								<div class="bar" style="width: 1%"></div> 
 							</div>
 							<img src='assets/img/pageLoadPreloader.gif' id='createMoviePreLoader'>
-							<a id='movieLink' > movie </a>
+							<video width="320" height="240" controls id='movieObject'>
+							  <source id='moviePlayer' type="video/mp4">
+							  <a id='movieLink' > movie </a>
+							</video>
+							
 						</div>
 					</div>
 				    </fieldset>
@@ -162,10 +166,7 @@
 			    </div>
 			    <div class="span7 offset1">
 			      <div>
-				<p>
-				  Content
-				</p>
-				<img src='' id='firstImage' style=" height: 350px;">
+					<img src='' id='firstImage' style=" height: 350px;">
 			      </div>
 			    </div>
 			  </div>

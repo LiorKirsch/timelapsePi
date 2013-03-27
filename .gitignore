@@ -1,8 +1,7 @@
-samplePic.jpeg
+*.jpeg
 output.avi
 *~
 .project
 .pydevproject
 media/
-active
-stop
+*.pyc

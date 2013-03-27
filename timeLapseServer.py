@@ -1,12 +1,10 @@
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import os, cgi, shutil, glob
 import subprocess
 from threading import Thread
 import time
 import thread
 import json
-import SimpleHTTPServer
-import SocketServer
+import SocketServer , SimpleHTTPServer
 import re
 
 class BooleanFile():
@@ -112,9 +110,9 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if self.server.stopSignal:
                     self.wfile.write(json.dumps({'active' :True,'params':params,'message':'stopping on next cycle'} ))
                 else:
-                    self.wfile.write(json.dumps({'active' :True,'params':params,'message':'active'} ))
+                    self.wfile.write(json.dumps({'active' :True,'params':params,'message':'time lapse active'} ))
             else:
-                self.wfile.write( json.dumps({'active' :False,'message':'not active'} ))
+                self.wfile.write( json.dumps({'active' :False,'message':'time lapse not active'} ))
         
         elif path[-1] == 'samplePic':
             self.send_response(200)
@@ -299,11 +297,9 @@ class MyHTTPServer(SocketServer.TCPServer):
 
 def checkStreamerIsInstalled():
     if subprocess.call(["which", "streamer"] , stdout=subprocess.PIPE) is not 0:
-        print("The program streamer, which pySnap requires to run, has not been detected. Enter in your password to install streamer, or press Control - C to exit the program.")
-        if os.path.lexists("streamer.deb"):
-            subprocess.call(["sudo", "dpkg", "-i", "streamer.deb"])
-        else:
-            subprocess.call(["sudo", "apt-get", "install", "-y", "streamer"])
+        subprocess.call(["sudo", "apt-get", "install", "-y", "streamer"])
+    if subprocess.call(["which", "mencoder"] , stdout=subprocess.PIPE) is not 0:
+        subprocess.call(["sudo", "apt-get", "install", "-y", "mencoder"])
 
 
 def getMyIP():
