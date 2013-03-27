@@ -274,7 +274,7 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.isActive = False
         self.stopSignal = False
         self.encodingInProgress = False
-        self.outputFileName = 'output.mp4'
+        self.outputFileName = 'output.avi'
         self.firstImageFileName = 'firstImage.jpeg'
 
         self.WEBCAM = []
