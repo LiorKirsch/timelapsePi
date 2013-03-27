@@ -82,7 +82,7 @@
 						}
 						//newOption.data('outputFilePath', dataReceive.list[x].outputFilePath);
 					  }
-    					
+					$("#projectList").change();
 	    			});
             };
     function stopTimeLapse(){
