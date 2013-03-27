@@ -1,9 +1,0 @@
-# First configure this to run under the pi user
-export USER='pi'
-
-# This needs to be the directory which hold the file 'timeLapseServer.py'
-eval cd ~$USER/timelapse
-
-# runs the python timeLapserServer and outputs to a file called time.log
-sudo -u pi python timeLapseServer.py > ./time.log &
-
