@@ -100,6 +100,7 @@
     				function (dataReceive) {
     					$('#createMoviePreLoader').hide();
     					$('#movieLink').attr("href",dataReceive.movieFileName);
+    					$('#movieLink').show();
     					$('#moviePlayer').attr("src",dataReceive.movieFileName);
     					$('#movieObject').show();
 	    			});
