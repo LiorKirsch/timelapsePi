@@ -227,7 +227,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         folder = self.getProjectFolder( projectName )
         outputFileName = folder + self.server.outputFileName
         print("Creating movie: %s" % outputFileName)
-        coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -of lavf -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
+        coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
         proc = subprocess.Popen( coderCommand.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         Thread(target=self.stream_watcher, name='stdout-watcher', args=('STDOUT', proc.stdout)).start()
         Thread(target=self.stream_watcher, name='stderr-watcher', args=('STDERR', proc.stderr)).start()

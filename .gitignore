@@ -5,3 +5,4 @@ output.avi
 .pydevproject
 media/
 *.pyc
+*.log
