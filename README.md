@@ -1,3 +1,4 @@
+.. image:: http://img.scoop.it/lEX6YmniEYaO8YdvrJAvuzl72eJkfbmt4t8yenImKBVaiQDB_Rd1H6kmuBWtceBJ
 TimelapsePi
 =================
 Makes your Pi a timelapse server and control it with the browser (and also your smartphone browser).
