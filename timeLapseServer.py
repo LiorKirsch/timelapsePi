@@ -299,9 +299,13 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.sampleFile.removeFile()
         
         # test for presence of Raspberry Pi camera
-        piCamTest = subprocess.check_output("vcgencmd get_camera", shell=True)
-        if piCamTest.find("detected=1") >= 0: 
-            self.WEBCAM.append('pi-camera')
+        try:
+            piCamTest = subprocess.check_output("vcgencmd get_camera", shell=True)
+            if piCamTest.find("detected=1") >= 0: 
+                self.WEBCAM.append('pi-camera')
+        except:
+            print('error while detecting the pi camera')
+                    
         
         # test for presence of USB webcams
         for videoDevice in glob.glob("/dev/video*"):

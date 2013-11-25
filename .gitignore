@@ -6,3 +6,4 @@ output.avi
 media/
 *.pyc
 *.log
+*.txt
