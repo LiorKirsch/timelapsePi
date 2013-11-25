@@ -193,8 +193,15 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if fileName is None:
             fileName = directory + currtime + ".jpeg"
         
-        resolution = '%sx%s' % (resolution[0] , resolution[1])
-        subprocess.call(["streamer", "-c", videoDevice, "-s", resolution, "-o", fileName,"-j","100"])
+        if videoDevice == 'pi-camera':
+            xresolution = '%s' % (resolution[0])
+            yresolution = '%s' % (resolution[1])
+            qualityInt = '75'
+            subprocess.call(["raspistill", "-q", qualityInt, "-t", "3", "-w", xresolution, "-h", yresolution, "-o", fileName])
+        else:
+            resolution = '%sx%s' % (resolution[0] , resolution[1])
+            subprocess.call(["streamer", "-c", videoDevice, "-s", resolution, "-o", fileName,"-j","100"])
+            
         self.server.lastPictureTime = currtime
         try:
         
@@ -227,7 +234,10 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         folder = self.getProjectFolder( projectName )
         outputFileName = folder + self.server.outputFileName
         print("Creating movie: %s" % outputFileName)
-        coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
+
+        coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc copy -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
+#        coderCommand = "mencoder mf://%s/*.jpeg -mf w=%s:h=%s:fps=%s:type=jpeg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o %s" % (folder, resolution[0], resolution[1], framesPerSecond, outputFileName)
+
         proc = subprocess.Popen( coderCommand.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         Thread(target=self.stream_watcher, name='stdout-watcher', args=('STDOUT', proc.stdout)).start()
         Thread(target=self.stream_watcher, name='stderr-watcher', args=('STDERR', proc.stderr)).start()
@@ -288,9 +298,18 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.sampleFile = BooleanFile(self.sampleFileName)
         self.sampleFile.removeFile()
         
+        # test for presence of Raspberry Pi camera
+        piCamTest = subprocess.check_output("vcgencmd get_camera", shell=True)
+        if piCamTest.find("detected=1") >= 0: 
+            self.WEBCAM.append('pi-camera')
+        
+        # test for presence of USB webcams
         for videoDevice in glob.glob("/dev/video*"):
             self.WEBCAM.append( videoDevice )
-                
+        
+        if not self.WEBCAM:
+            print('------- camera not found -------\n')
+                    
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass) 
         #HTTPServer.__init__(self, server_address, RequestHandlerClass)   
 
@@ -320,6 +339,7 @@ if __name__ == "__main__":
 
     try:
         checkStreamerIsInstalled()
+        MyHTTPServer.allow_reuse_address = True
         server = MyHTTPServer(('', port), MyHandler)
 	#webbrowser.open(url,new='new')
         server.serve_forever()
