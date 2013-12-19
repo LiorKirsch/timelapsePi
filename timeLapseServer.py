@@ -332,7 +332,7 @@ class MyHTTPServer(SocketServer.TCPServer):
         print('detecing pi-camera...\n')
         try:
             piCamTest = subprocess.check_output("vcgencmd get_camera", shell=True)
-            if piCamTest.find("detected=1") >= 0: 
+            if piCamTest.decode('ascii').find("detected=1") >= 0: 
                 self.WEBCAM.append('pi-camera')
         except:
             print('error while detecting the pi camera \ntrying to continue...')
