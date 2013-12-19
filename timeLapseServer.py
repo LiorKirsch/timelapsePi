@@ -1,12 +1,32 @@
+##################################################
+#
+#    timeLapse Pi - created by Lior Kirsch 2013
+#    This script makes your Pi a timelapse server by running a simpleHTTPServer instance
+#
+##################################################
+
 import os, cgi, shutil, glob
 import subprocess
 from threading import Thread
 import time
-import thread
 import json
-import SocketServer , SimpleHTTPServer
 import re
 
+try:    
+    import thread 
+except ImportError:
+    import _thread as thread #Py3K changed it.
+    
+try:    
+    import SocketServer 
+except ImportError:
+    import socketserver as SocketServer #Py3K changed it.
+
+try:    
+    import SimpleHTTPServer 
+except ImportError:
+    import http.server as SimpleHTTPServer #Py3K changed it.
+    
 class BooleanFile():
     def __init__(self, fileName):
         self.booleanFileName = fileName
@@ -35,12 +55,12 @@ class BooleanFile():
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
     def getPostVars(self):
-        if int(self.headers.getheader('content-length')) > 0:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+        if int(self.headers['content-length']) > 0:
+            ctype, pdict = cgi.parse_header(self.headers['content-type'])
             if ctype == 'multipart/form-data':
                 postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers.getheader('content-length'))
+                length = int(self.headers['content-length'])
                 postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
             else:
                 postvars = {}
@@ -55,7 +75,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         
         postvars = self.getPostVars()
         
-        if postvars.has_key('videoDevice'):
+        if 'videoDevice' in postvars:
             videoDevice = postvars['videoDevice'][0]
         else:
             videoDevice = self.server.WEBCAM[0]
@@ -68,13 +88,13 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         
             #self.server.stopFile.createFile()
             self.server.stopSignal = True
-            self.wfile.write(json.dumps({'status' :'stop sent'} ))
+            self.wfile.write(json.dumps({'status' :'stop sent'} ).encode('utf-8') )
         
         elif path[-1] == 'getVideoDevices':
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write( json.dumps(self.server.WEBCAM) )
+            self.wfile.write( json.dumps(self.server.WEBCAM).encode('utf-8') )
             
         elif path[-1] == 'projectList':
             self.send_response(200)
@@ -97,7 +117,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     firstImageFileName = None
                     
                 projectObject.append({'name': projectName,'outputFilePath':outputFilePath,'firstImageFileName': firstImageFileName})
-            self.wfile.write( json.dumps({'list' : projectObject}))
+            self.wfile.write( json.dumps({'list' : projectObject}).encode('utf-8') )
             
         elif path[-1] == 'active':
             self.send_response(200)
@@ -108,22 +128,23 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 params = self.server.lastActivationParams
                 params['lastPictureTime'] = self.server.lastPictureTime
                 if self.server.stopSignal:
-                    self.wfile.write(json.dumps({'active' :True,'params':params,'message':'stopping on next cycle'} ))
+                    self.wfile.write(json.dumps({'active' :True,'params':params,'message':'stopping on next cycle'} ).encode('utf-8') )
                 else:
-                    self.wfile.write(json.dumps({'active' :True,'params':params,'message':'time lapse active'} ))
+                    self.wfile.write(json.dumps({'active' :True,'params':params,'message':'time lapse active'} ).encode('utf-8') )
             else:
-                self.wfile.write( json.dumps({'active' :False,'message':'time lapse not active'} ))
+                self.wfile.write( json.dumps({'active' :False,'message':'time lapse not active'} ).encode('utf-8') )
+                
         
         elif path[-1] == 'samplePic':
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             
-            if postvars.has_key('imageWidth'):
+            if 'imageWidth' in postvars:
                 imageWidth = postvars['imageWidth'][0]
             else:
                 imageWidth = self.server.imageWidthDefault
-            if postvars.has_key('imageHeight'):
+            if 'imageHeight' in postvars:
                 imageHeight = postvars['imageHeight'][0]
             else:
                 imageHeight = self.server.imageHeightDefault
@@ -139,13 +160,13 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             resolution = (postvars['imageWidth'][0] , postvars['imageHeight'][0])
             framesPerSecond =  postvars['fps'][0]
             outputFileName = self.createMovie(projectName, framesPerSecond, resolution)
-            self.wfile.write( json.dumps({'movieFileName' :outputFileName} ))
+            self.wfile.write( json.dumps({'movieFileName' :outputFileName} ).encode('utf-8') )
                         
         elif path[-1] == 'start': 
             
             self.server.stopFile.removeFile()
                 
-            if postvars.has_key('project'):
+            if 'project' in postvars:
                 folder = self.getProjectFolder( postvars['project'][0] )
                 if not os.path.lexists(folder):
                     os.mkdir(folder)
@@ -158,24 +179,24 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 folder = self.server.mediaFolderDefault + '/'
             
-            if postvars.has_key('imageWidth'):
+            if 'imageWidth' in postvars:
                 imageWidth = postvars['imageWidth'][0]
             else:
                 imageWidth = self.server.imageWidthDefault
             
-            if postvars.has_key('imageHeight'):
+            if 'imageHeight' in postvars:
                 imageHeight = postvars['imageHeight'][0]
             else:
                 imageHeight = self.server.imageHeightDefault
                  
           
-            if postvars.has_key('seconds') & postvars['seconds'][0].isdigit():
+            if 'seconds' in postvars & postvars['seconds'][0].isdigit():
                 thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], videoDevice, folder, postvars['project'][0], (imageWidth, imageHeight) ) )
                 cameraParam = {'seconds': postvars['seconds'][0],'device': videoDevice,'folder': folder}
-                jsonResponse = json.dumps( {'status':'camera started','cameraParam': cameraParam} )
+                jsonResponse = json.dumps( {'status':'camera started','cameraParam': cameraParam} ).encode('utf-8')
             else:
                 cameraParam = {'seconds': postvars['seconds'][0],'device': videoDevice,'folder': folder}
-                jsonResponse = json.dumps( {'status':'camera not started','cameraParam': cameraParam} )
+                jsonResponse = json.dumps( {'status':'camera not started','cameraParam': cameraParam} ).encode('utf-8')
                 
             self.wfile.write(jsonResponse)        
             
@@ -299,15 +320,17 @@ class MyHTTPServer(SocketServer.TCPServer):
         self.sampleFile.removeFile()
         
         # test for presence of Raspberry Pi camera
+        print('detecing pi-camera...\n')
         try:
             piCamTest = subprocess.check_output("vcgencmd get_camera", shell=True)
             if piCamTest.find("detected=1") >= 0: 
                 self.WEBCAM.append('pi-camera')
         except:
-            print('error while detecting the pi camera')
+            print('error while detecting the pi camera \ntrying to continue...')
                     
         
         # test for presence of USB webcams
+        print('detecing other video/camera devices...\n')
         for videoDevice in glob.glob("/dev/video*"):
             self.WEBCAM.append( videoDevice )
         
@@ -334,7 +357,7 @@ def getMyIP():
     return my_ip
 
 if __name__ == "__main__":
-    port = 8000
+    port = 8001
     try:
         url = "http://%s:%d" % (getMyIP(), port)
         print('Started http server. go to ' + url)
