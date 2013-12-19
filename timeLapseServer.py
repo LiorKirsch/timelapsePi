@@ -54,29 +54,40 @@ class BooleanFile():
     
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
-    def getPostVars(self):
-        if int(self.headers['content-length']) > 0:
-            ctype, pdict = cgi.parse_header(self.headers['content-type'])
-            if ctype == 'multipart/form-data':
-                postvars = cgi.parse_multipart(self.rfile, pdict)
-            elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers['content-length'])
-                postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
-            else:
-                postvars = {}
-        else:
-            postvars = {}
-        return postvars
+#    def getPostVars(self):
+#        if int(self.headers['content-length']) > 0:
+#            ctype, pdict = cgi.parse_header(self.headers['content-type'])
+#            if ctype == 'multipart/form-data':
+#                postvars = cgi.parse_multipart(self.rfile, pdict)
+#            elif ctype == 'application/x-www-form-urlencoded':
+#                length = int(self.headers['content-length'])
+#                postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+#            else:
+#                postvars = {}
+#        else:
+#            postvars = {}
+#        return postvars
     
     def do_POST(self):
-         
+            
         p = self.path.split("?")
         path = p[0][1:].split("/")
         
-        postvars = self.getPostVars()
-        
-        if 'videoDevice' in postvars:
-            videoDevice = postvars['videoDevice'][0]
+        try :
+            contentType = self.headers['Content-Type']
+        except:
+            contentType = None
+
+        form = cgi.FieldStorage(
+            fp=self.rfile,
+            headers=self.headers,
+            environ={'REQUEST_METHOD':'POST',
+                     'CONTENT_TYPE':contentType,
+                     })
+
+       
+        if 'videoDevice' in form:
+            videoDevice = form.getvalue('videoDevice')
         else:
             videoDevice = self.server.WEBCAM[0]
                 
@@ -140,12 +151,12 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             
-            if 'imageWidth' in postvars:
-                imageWidth = postvars['imageWidth'][0]
+            if 'imageWidth' in form:
+                imageWidth = form.getvalue('imageWidth')
             else:
                 imageWidth = self.server.imageWidthDefault
-            if 'imageHeight' in postvars:
-                imageHeight = postvars['imageHeight'][0]
+            if 'imageHeight' in form:
+                imageHeight = form.getvalue('imageHeight')
             else:
                 imageHeight = self.server.imageHeightDefault
             
@@ -156,9 +167,9 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             
-            projectName =  postvars['project'][0] 
-            resolution = (postvars['imageWidth'][0] , postvars['imageHeight'][0])
-            framesPerSecond =  postvars['fps'][0]
+            projectName =  form.getvalue('project')
+            resolution = (form.getvalue('imageWidth') , form.getvalue('imageHeight') )
+            framesPerSecond =  form.getvalue('fps')
             outputFileName = self.createMovie(projectName, framesPerSecond, resolution)
             self.wfile.write( json.dumps({'movieFileName' :outputFileName} ).encode('utf-8') )
                         
@@ -166,36 +177,34 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             
             self.server.stopFile.removeFile()
                 
-            if 'project' in postvars:
-                folder = self.getProjectFolder( postvars['project'][0] )
+            if 'project' in form:
+                folder = self.getProjectFolder( form.getvalue('project') )
                 if not os.path.lexists(folder):
                     os.mkdir(folder)
-
-            #try:
-            #	if not os.path.lexists(self.server.boxMediaFolder + folder):
-            #		os.mkdir(self.server.boxMediaFolder + folder)
-            #except:
-            #	print('error creating box project folder')
             else:
                 folder = self.server.mediaFolderDefault + '/'
             
-            if 'imageWidth' in postvars:
-                imageWidth = postvars['imageWidth'][0]
+            if 'imageWidth' in form:
+                imageWidth = form.getvalue('imageWidth')
             else:
                 imageWidth = self.server.imageWidthDefault
             
-            if 'imageHeight' in postvars:
-                imageHeight = postvars['imageHeight'][0]
+            if 'imageHeight' in form:
+                imageHeight = form.getvalue('imageHeight')
             else:
                 imageHeight = self.server.imageHeightDefault
                  
-          
-            if 'seconds' in postvars & postvars['seconds'][0].isdigit():
-                thread.start_new_thread(self.activateCamera , (postvars['seconds'][0], videoDevice, folder, postvars['project'][0], (imageWidth, imageHeight) ) )
-                cameraParam = {'seconds': postvars['seconds'][0],'device': videoDevice,'folder': folder}
+            seconds = None
+            if 'seconds' in form:
+                if form.getvalue('seconds').isdigit():
+                    seconds = form.getvalue('seconds')
+
+            if seconds is not None:
+                thread.start_new_thread(self.activateCamera , (seconds, videoDevice, folder, form.getvalue('project'), (imageWidth, imageHeight) ) )
+                cameraParam = {'seconds': seconds,'device': videoDevice,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera started','cameraParam': cameraParam} ).encode('utf-8')
             else:
-                cameraParam = {'seconds': postvars['seconds'][0],'device': videoDevice,'folder': folder}
+                cameraParam = {'seconds': seconds,'device': videoDevice,'folder': folder}
                 jsonResponse = json.dumps( {'status':'camera not started','cameraParam': cameraParam} ).encode('utf-8')
                 
             self.wfile.write(jsonResponse)        
